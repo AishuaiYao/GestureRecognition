@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import cv2
 import numpy as np
+import motiondetection as md
 
 def absdiff(image_1, image_2, sThre):
     gray_image_1 = cv2.cvtColor(image_1, cv2.COLOR_BGR2GRAY)  # 灰度化
@@ -11,35 +12,25 @@ def absdiff(image_1, image_2, sThre):
     ret, d_frame = cv2.threshold(d_frame, sThre, 255, cv2.THRESH_BINARY)
     return d_frame
 
-def backgrounddifference(frame,fgbg,kernel):
+
+def backgrounddifference(frame,fgbg):
     fgmask = fgbg.apply(frame)
-    # fgmask = fgbg3.apply(frame)
-    fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel, iterations=1)  # 形态学开运算
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    fgmask = cv2.erode(fgmask, kernel, iterations=1)
+    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    fgmask = cv2.dilate(fgmask,kernel, iterations=10)
     _, contours, hierarchy = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    ROI=frame
+
+    ROI=None
     if contours is not None:
         for c in contours:
-            if cv2.contourArea(c) < 1800:
+            if cv2.contourArea(c) <2999:
                 continue
             (x, y, w, h) = cv2.boundingRect(c)
-            # if (y < 100):
-            #     y = 100
-            # if (x < 100):
-            #     x = 100
-            # X.append(x)
-            # Y.append(y)
+            cv2.putText(frame, "ROIsize:"+str(cv2.contourArea(c)),(20, 70), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 0, 255),2)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            # print x, y, w, h
-            # if len(X) > 9:
-            #     print "length:",len(X)
-            #     x =int(sum(X)/10)
-            #     X.pop()
-            #     y= int(sum(Y)/10)
-            #     Y.pop()
-            #     print "x:",x,"y:",y
-            #     cv2.putText(frame, "ROI's coordinate:"+str((x,y)),(20, 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 255))
-            # print (y, y + h, x, x + w)
             ROI=frame[y:y + h, x:x + w]
+
     return fgmask,ROI
 
 
@@ -78,6 +69,8 @@ def backgrounddifference(frame,fgbg,kernel):
 #             (x, y, w, h) = cv2.boundingRect(newcontours)
 #             #                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0),2)
 #             seperate = frame[y:(y + h * 1), x:(x + w * 1)]
+#             fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_CLOSE, kernel, iterations=1)  # 形态学开运算
+
 
 last_centroid=(0,0)
 def getDistance(pointa,pointb ):
