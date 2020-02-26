@@ -1,2 +1,2 @@
 # GestureRecognition
-手势识别；最初关键词：肤色检测+CNN+python+opencv；unity插件
+基于肤色检测和运动信息对首部位置进行定位实验，手势识别功能可以参考Keras仓库asl项目
